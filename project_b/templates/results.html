@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Recommendations | Movie Match{% endblock %}
+
+{% block content %}
+<section class="section-heading">
+    <p class="eyebrow">Your results</p>
+    <h1>Recommended movies</h1>
+    {% if summary.selected_genres %}
+        <p>Matched genres: {{ summary.selected_genres | map(attribute='name') | join(', ') }}</p>
+    {% endif %}
+</section>
+
+{% if summary.selected_options %}
+    <section class="choice-summary" aria-label="Selected quiz answers">
+        {% for option in summary.selected_options %}
+            <span>{{ option.option_text }}</span>
+        {% endfor %}
+    </section>
+{% endif %}
+
+{% if not recommendations %}
+    <section class="empty-state">
+        <h2>No recommendations found</h2>
+        <p>Try different answers, or make sure the CSV data has been imported.</p>
+        <a class="button secondary" href="{{ url_for('quiz') }}">Retake quiz</a>
+    </section>
+{% else %}
+    <section class="recommendation-list" aria-label="Movie recommendations">
+        {% for item in recommendations %}
+            {% set movie = item.movie %}
+            <article class="movie-card">
+                <div class="movie-card-main">
+                    <div>
+                        <p class="match-label">{{ item.match_count }} genre match{{ '' if item.match_count == 1 else 'es' }}</p>
+                        <h2>{{ movie.title }}</h2>
+                        <p class="movie-meta">
+                            {% if movie.start_year %}{{ movie.start_year }}{% else %}Unknown year{% endif %}
+                            {% if movie.runtime_minutes %} · {{ movie.runtime_minutes }} min{% endif %}
+                        </p>
+                    </div>
+                    <div class="rating-badge">
+                        <span>{{ "%.1f" | format(movie.average_rating) }}</span>
+                        <small>{{ "{:,}".format(movie.num_votes) }} votes</small>
+                    </div>
+                </div>
+
+                {% if item.genres %}
+                    <div class="tag-row">
+                        {% for genre in item.genres %}
+                            <span>{{ genre }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="people-lines">
+                    {% if item.directors %}<p><strong>Director:</strong> {{ item.directors | join(', ') }}</p>{% endif %}
+                    {% if item.actors %}<p><strong>Cast:</strong> {{ item.actors | join(', ') }}</p>{% endif %}
+                </div>
+
+                <a class="text-link" href="{{ url_for('movie_detail', movie_id=movie.id) }}">View details</a>
+            </article>
+        {% endfor %}
+    </section>
+
+    <div class="form-actions">
+        <a class="button secondary" href="{{ url_for('quiz') }}">Retake quiz</a>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}{{ movie.title }} | Movie Match{% endblock %}
+
+{% block content %}
+<article class="detail-panel">
+    <a class="text-link" href="javascript:history.back()">Back to results</a>
+
+    <header class="detail-header">
+        <div>
+            <p class="eyebrow">Movie details</p>
+            <h1>{{ movie.title }}</h1>
+            <p class="movie-meta">
+                {% if movie.start_year %}{{ movie.start_year }}{% else %}Unknown year{% endif %}
+                {% if movie.runtime_minutes %} · {{ movie.runtime_minutes }} min{% endif %}
+            </p>
+        </div>
+        {% if movie.average_rating %}
+            <div class="rating-badge large">
+                <span>{{ "%.1f" | format(movie.average_rating) }}</span>
+                <small>{{ "{:,}".format(movie.num_votes or 0) }} votes</small>
+            </div>
+        {% endif %}
+    </header>
+
+    {% if genres %}
+        <div class="tag-row detail-tags">
+            {% for genre in genres %}
+                <span>{{ genre }}</span>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="detail-grid">
+        <section>
+            <h2>Directors</h2>
+            <p>{{ directors | join(', ') if directors else 'Not listed' }}</p>
+        </section>
+        <section>
+            <h2>Writers</h2>
+            <p>{{ writers | join(', ') if writers else 'Not listed' }}</p>
+        </section>
+        <section class="wide">
+            <h2>Cast</h2>
+            <p>{{ actors | join(', ') if actors else 'Not listed' }}</p>
+        </section>
+    </div>
+</article>
+{% endblock %}
