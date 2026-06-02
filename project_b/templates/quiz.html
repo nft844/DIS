@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Take the Quiz | Movie Match{% endblock %}
+
+{% block content %}
+<section class="section-heading">
+    <p class="eyebrow">Movie quiz</p>
+    <h1>What are you in the mood for?</h1>
+    <p>Choose one answer for each question.</p>
+</section>
+
+{% if error %}
+    <div class="alert" role="alert">{{ error }}</div>
+{% endif %}
+
+{% if not questions %}
+    <section class="empty-state">
+        <h2>No quiz questions yet</h2>
+        <p>Import the CSV files and run the quiz seed script, then come back here.</p>
+    </section>
+{% else %}
+    <form class="quiz-form" method="post" action="{{ url_for('submit_quiz') }}">
+        {% for question in questions %}
+            <fieldset class="question-card">
+                <legend>{{ question.question_text }}</legend>
+                <div class="answer-list">
+                    {% for option in question.answer_options %}
+                        <label class="answer-option">
+                            <input
+                                type="radio"
+                                name="question_{{ question.id }}"
+                                value="{{ option.id }}"
+                                required
+                            >
+                            <span>{{ option.option_text }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </fieldset>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button class="button primary" type="submit">Show recommendations</button>
+        </div>
+    </form>
+{% endif %}
+{% endblock %}

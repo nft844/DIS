@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Movie Match{% endblock %}
+
+{% block content %}
+<section class="hero-panel">
+    <p class="eyebrow">Local IMDb recommendations</p>
+    <h1>Find a movie that fits tonight.</h1>
+    <p class="hero-copy">
+        Answer a few quick questions, and the app matches your answers to genres in the local CSV database.
+    </p>
+    <div class="hero-actions">
+        <a class="button primary" href="{{ url_for('quiz') }}">Start the quiz</a>
+    </div>
+</section>
+
+<section class="info-grid" aria-label="How the app works">
+    <article class="info-card">
+        <h2>Simple quiz</h2>
+        <p>Pick the mood, story style, and intensity you want.</p>
+    </article>
+    <article class="info-card">
+        <h2>Genre matching</h2>
+        <p>Your answers map to real genres from the imported database.</p>
+    </article>
+    <article class="info-card">
+        <h2>Ranked results</h2>
+        <p>Movies with more matches, stronger ratings, and more votes rise to the top.</p>
+    </article>
+</section>
+{% endblock %}
