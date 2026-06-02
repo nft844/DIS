@@ -1,24 +1,39 @@
 # Movie Match
 
-Movie Match is a local Flask web app that recommends movies from the IMDb CSV files in this folder. The user answers a short quiz, each answer maps to one or more genres, and the app ranks matching movies by genre overlap, rating, and vote count.
+Movie Match is a local movie recommendation web app.
 
-The app does not use external movie APIs or machine learning.
+The user answers a short quiz. The app then recommends movies from the CSV files in this project.
 
-## Project Structure
+The app uses Flask, PostgreSQL, SQLAlchemy, HTML and CSS.
+
+## What The App Does
+
+1. The user answers quiz questions.
+2. Each answer is connected to one or more movie genres.
+3. The app finds movies with those genres.
+4. The best matches are shown first.
+
+Movies are ranked by:
+
+1. How many selected genres match the movie
+2. The movie's average rating
+3. The number of votes
+
+## Important Files
 
 ```text
-app.py                 Flask routes and app setup
-config.py              Environment-based configuration
-db.py                  SQLAlchemy database object
-models.py              Database tables and relationships
-recommendations.py     Quiz-to-movie recommendation logic
-import_data.py         CSV import script
-seed_quiz.py           Quiz seed script
-templates/             Jinja HTML templates
-static/css/style.css   App styling
+app.py              Flask routes
+models.py           Database tables
+import_data.py      Imports the CSV files
+seed_quiz.py        Adds quiz questions and answers
+recommendations.py  Recommendation logic
+templates/          HTML pages
+static/css/         CSS styling
 ```
 
-The CSV files are expected to stay in the project root by default:
+## CSV Files
+
+Keep these CSV files in the project folder:
 
 ```text
 movies.csv
@@ -30,7 +45,11 @@ movie_actors.csv
 movie_crew.csv
 ```
 
-## 1. Create and Activate a Virtual Environment
+## How To Run The Project
+
+Run these commands from the project folder.
+
+### 1. Create a virtual environment
 
 ```bash
 python3 -m venv .venv
@@ -38,153 +57,75 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## 2. Create a PostgreSQL Database
+### 2. Start PostgreSQL
 
-Install and start PostgreSQL if it is not already running.
-
-On macOS with Homebrew:
+If PostgreSQL is not installed on macOS, run:
 
 ```bash
 brew install postgresql@16
 brew services start postgresql@16
 ```
 
-Homebrew installs PostgreSQL 16 as a versioned package, so the command-line tools may not be on your normal `PATH`. You can either run `createdb` with the full path:
+Create the database:
 
 ```bash
 /opt/homebrew/opt/postgresql@16/bin/createdb movie_quiz
 ```
 
-Or add PostgreSQL to your shell path and then run `createdb` normally:
+If it says the database already exists, that is okay.
 
-```bash
-echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-createdb movie_quiz
-```
-
-If `createdb movie_quiz` says the database already exists, you can continue to the next step.
-
-On systems where PostgreSQL is already on your `PATH`, create the local database with:
-
-```bash
-createdb movie_quiz
-```
-
-If your PostgreSQL setup needs a username, password, host, or port, use a full URL like this instead:
-
-```text
-postgresql+psycopg://username:password@localhost:5432/movie_quiz
-```
-
-## 3. Configure Environment Variables
-
-Copy the example file and edit it if needed:
+### 3. Create the `.env` file
 
 ```bash
 cp .env.example .env
 ```
 
-Default `.env` values:
+The default database setting is:
 
 ```text
 DATABASE_URL=postgresql+psycopg://localhost/movie_quiz
-SECRET_KEY=change-this-local-secret
-CSV_DIR=.
 ```
 
-`CSV_DIR=.` means the importer will read the CSV files from the project root. If you move the CSV files into another folder, update `CSV_DIR` or pass `--csv-dir` when importing.
-
-## 4. Create Tables and Import CSV Data
-
-From the project root, run:
+### 4. Import the movie data
 
 ```bash
 python import_data.py --reset
 ```
 
-This drops and recreates the tables, then imports all seven CSV files. The import prints progress every batch because `movie_actors.csv`, `people.csv`, and `movie_crew.csv` are large.
+This may take a few minutes because the CSV files are large.
 
-To import into an already empty database without dropping tables, run:
-
-```bash
-python import_data.py
-```
-
-If the database already has data, the script stops unless you use `--reset`.
-
-## 5. Seed the Quiz
-
-After importing the CSV data, insert the quiz questions and answer options:
+### 5. Add the quiz data
 
 ```bash
 python seed_quiz.py --reset
 ```
 
-The seed script uses only genres that exist in the imported `genre` table.
-
-## 6. Run the App
+### 6. Run the app
 
 ```bash
 flask --app app run
 ```
 
-Open the local URL Flask prints, usually:
+Open this address in your browser:
 
 ```text
 http://127.0.0.1:5000
 ```
 
-## Useful Commands
+## SQL And Regex
 
-Create database tables without importing data:
+The project includes visible SQL statements:
 
-```bash
-flask --app app create-db
-```
+- [app.py](app.py) has `INSERT` statements for saving quiz attempts and answers.
+- [recommendations.py](recommendations.py) has a `SELECT` statement for finding recommended movies.
 
-Seed quiz data without replacing existing questions:
+The project also uses regex:
 
-```bash
-flask --app app seed-quiz
-```
-
-Import from a different CSV folder:
-
-```bash
-python import_data.py --reset --csv-dir /path/to/csv-folder
-```
-
-Use a larger import batch size:
-
-```bash
-python import_data.py --reset --batch-size 25000
-```
-
-## Recommendation Logic
-
-The recommendation algorithm is intentionally simple:
-
-1. Find the genres connected to the selected quiz answers.
-2. Count how many selected genres match each movie.
-3. Keep movies with ratings and at least 1,000 votes when possible.
-4. Sort by more genre matches, then higher average rating, then more votes.
-5. Return about 10 movies.
-
-This keeps the behavior easy to explain while still giving good results from the local dataset.
-
-## SQL and Regex Requirements
-
-The project includes visible SQL statements in the application code:
-
-- [app.py](app.py) uses explicit `INSERT INTO quiz_attempt` and `INSERT INTO quiz_response` statements when saving quiz attempts.
-- [recommendations.py](recommendations.py) uses an explicit `SELECT` statement with `JOIN`, `GROUP BY`, and `ORDER BY` to score recommendation matches.
-
-The project also uses regex matching in [recommendations.py](recommendations.py). The `IMDB_MOVIE_ID_RE` pattern validates movie detail URLs so only IMDb-style IDs like `tt0000009` are accepted.
+- [recommendations.py](recommendations.py) checks that movie IDs look like IMDb IDs, for example `tt0000009`.
 
 ## Notes
 
-- `movie_actors.csv` can contain duplicate rows, so the app imports it into `movie_feature` with a generated numeric primary key.
-- Actor and crew rows that reference a missing movie or person are skipped during import and reported in the import output.
-- `movies.csv` and `ratings.csv` are combined into one `movie` table. Rating fields are nullable for movies that do not have a rating row.
-- The app stores each quiz attempt and response in the database before showing recommendations.
+- `movies.csv` and `ratings.csv` are combined into one movie table.
+- `movie_actors.csv` can contain duplicate rows, so the app gives those rows their own generated ID.
+- Some actor or crew rows may reference missing movies or people. Those rows are skipped during import.
+- The app is meant to run locally on your computer.
